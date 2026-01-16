@@ -492,7 +492,7 @@ const ProductosSystem = {
                     producto.precioOriginal = producto.precio;
                     producto.precio = producto.precio * (1 - producto.descuento / 100);
                     producto.tieneDescuento = true;
-                    console.log(`💰 Producto con descuento: ${producto.nombre} (${producto.descuento}% OFF)`);
+                    console.log(`💰 Producto con descuento: ${producto.nombre} (${producto.descuento}% OFF), tieneDescuento: ${producto.tieneDescuento}`);
                     
                     // Agregar "Con Descuento" como subcategoría adicional
                     // Primero, normalizar subcategorias a un array
@@ -520,6 +520,9 @@ const ProductosSystem = {
                     // Guardar el array normalizado
                     producto.subcategorias = subcategoriasActuales;
                     console.log(`  → Subcategorías asignadas: ${subcategoriasActuales.join(', ')}`);
+                } else {
+                    // Si no tiene descuento, asegurarse de que tieneDescuento sea false
+                    producto.tieneDescuento = false;
                 }
                 
                 this.productos.push(producto);
@@ -979,6 +982,14 @@ const ProductosSystem = {
                 const slug = this.normalizar('Con Descuento');
                 conDescuentoHTML = `<button class="filter-btn" data-filter="${slug}">Con Descuento</button>`;
                 console.log(`💳 Botón "Con Descuento" agregado. Slug normalizado: "${slug}", Productos con descuento: ${productosConDescuento.length}`);
+                productosConDescuento.forEach(p => {
+                    console.log(`  → ${p.nombre}: descuento=${p.descuento}%, tieneDescuento=${p.tieneDescuento}, subcategorias=${JSON.stringify(p.subcategorias)}`);
+                });
+            } else {
+                console.log(`⚠️ No hay productos con tieneDescuento=true. Total productos: ${this.productos.length}`);
+                this.productos.forEach(p => {
+                    console.log(`  → ${p.nombre}: tieneDescuento=${p.tieneDescuento}, descuento=${p.descuento}`);
+                });
             }
 
             // Reemplazar contenido pero mantener "Todas" y agregar "Con Descuento"
