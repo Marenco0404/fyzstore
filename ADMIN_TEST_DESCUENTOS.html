@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Agregar Productos de Prueba con Descuento</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            border-left: 4px solid #FFD700;
+            padding-left: 15px;
+        }
+        .test-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+        button {
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #FFC700;
+        }
+        .results {
+            background: #1a1a1a;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .pass { color: #90EE90; }
+        .fail { color: #FF6B6B; }
+        .info { color: #87CEEB; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: #FFD700; margin-bottom: 30px;">🛠️ Admin - Crear Productos con Descuento</h1>
+        
+        <div class="test-section">
+            <div class="test-title">1. Verificar Productos Existentes</div>
+            <button onclick="verificarProductos()">Ver Productos y sus Descuentos</button>
+            <div class="results" id="result1"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">2. Agregar Productos de Prueba con Descuento</div>
+            <button onclick="agregarProductosDescuento()">Crear 3 Productos de Prueba CON Descuento</button>
+            <div class="results" id="result2"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">3. Verificar Descuentos Agregados</div>
+            <button onclick="verificarDescuentosAgregados()">Verificar Productos Agregados</button>
+            <div class="results" id="result3"></div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script>
+        async function verificarProductos() {
+            let html = '<span class="info">📦 Verificando productos...</span><br><br>';
+            
+            try {
+                const snapshot = await db.collection('productos').limit(50).get();
+                const productosConDescuento = [];
+                const productosSinDescuento = [];
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.descuento && data.descuento > 0) {
+                        productosConDescuento.push({
+                            id: doc.id,
+                            nombre: data.nombre,
+                            precio: data.precio,
+                            descuento: data.descuento,
+                            precioFinal: data.precio * (1 - data.descuento / 100)
+                        });
+                    } else {
+                        productosSinDescuento.push({
+                            id: doc.id,
+                            nombre: data.nombre,
+                            precio: data.precio,
+                            descuento: data.descuento || 0
+                        });
+                    }
+                });
+                
+                html += `<span class="pass">✅ Total: ${snapshot.size} productos cargados</span><br>`;
+                html += `<span class="pass">✅ CON descuento: ${productosConDescuento.length}</span><br>`;
+                html += `<span class="fail">❌ SIN descuento: ${productosSinDescuento.length}</span><br><br>`;
+                
+                if (productosConDescuento.length > 0) {
+                    html += '<span class="pass">📌 Productos CON Descuento:</span><br>';
+                    productosConDescuento.slice(0, 5).forEach(p => {
+                        html += `<span class="info">  • ${p.nombre}: ${p.descuento}% OFF (₡${p.precio} → ₡${p.precioFinal.toFixed(0)})</span><br>`;
+                    });
+                } else {
+                    html += '<span class="fail">⚠️ NO HAY PRODUCTOS CON DESCUENTO!</span><br>';
+                }
+                
+                if (productosSinDescuento.length > 0) {
+                    html += '<br><span class="info">📌 Primeros 3 productos SIN descuento:</span><br>';
+                    productosSinDescuento.slice(0, 3).forEach(p => {
+                        html += `<span class="info">  • ${p.nombre} (₡${p.precio})</span><br>`;
+                    });
+                }
+                
+            } catch (error) {
+                html += `<span class="fail">❌ Error: ${error.message}</span><br>`;
+            }
+            
+            document.getElementById('result1').innerHTML = html;
+        }
+        
+        async function agregarProductosDescuento() {
+            let html = '<span class="info">🔄 Agregando productos de prueba...</span><br><br>';
+            
+            try {
+                const productosDemo = [
+                    {
+                        nombre: 'Perfume Masculino Premium - TEST DESCUENTO',
+                        descripcion: 'Fragancia exclusiva para hombre con descuento de prueba',
+                        precio: 25000,
+                        descuento: 20,
+                        stock: 10,
+                        categoria: 'perfumeria',
+                        subcategoria: 'Hombre',
+                        estado: 'active',
+                        imagen: 'https://via.placeholder.com/300x300?text=Perfume+Men',
+                        fechaCreacion: new Date().toISOString()
+                    },
+                    {
+                        nombre: 'Perfume Femenino - TEST DESCUENTO',
+                        descripcion: 'Aroma floral para mujer con descuento especial',
+                        precio: 28000,
+                        descuento: 15,
+                        stock: 8,
+                        categoria: 'perfumeria',
+                        subcategoria: 'Mujer',
+                        estado: 'active',
+                        imagen: 'https://via.placeholder.com/300x300?text=Perfume+Women',
+                        fechaCreacion: new Date().toISOString()
+                    },
+                    {
+                        nombre: 'Juguete Popular - TEST DESCUENTO',
+                        descripcion: 'Producto popular con gran descuento',
+                        precio: 15000,
+                        descuento: 30,
+                        stock: 15,
+                        categoria: 'sexshop',
+                        subcategoria: 'Juguetes',
+                        estado: 'active',
+                        imagen: 'https://via.placeholder.com/300x300?text=Juguete',
+                        fechaCreacion: new Date().toISOString()
+                    }
+                ];
+                
+                let agregados = 0;
+                for (const producto of productosDemo) {
+                    await db.collection('productos').add(producto);
+                    agregados++;
+                    html += `<span class="pass">✅</span> Agregado: <span class="pass">${producto.nombre}</span> (${producto.descuento}% OFF)<br>`;
+                }
+                
+                html += `<br><span class="pass">✅ Total agregado: ${agregados} productos</span><br>`;
+                html += '<span class="info">💡 Recarga la página de Perfumería/Sex Shop para ver los cambios</span><br>';
+                
+            } catch (error) {
+                html += `<span class="fail">❌ Error: ${error.message}</span><br>`;
+            }
+            
+            document.getElementById('result2').innerHTML = html;
+        }
+        
+        async function verificarDescuentosAgregados() {
+            let html = '<span class="info">🔍 Buscando productos agregados...</span><br><br>';
+            
+            try {
+                const snapshot = await db.collection('productos')
+                    .where('nombre', '>=', 'TEST')
+                    .get();
+                
+                if (snapshot.size === 0) {
+                    html += '<span class="info">Buscando por otra forma...</span><br>';
+                    const allSnapshot = await db.collection('productos').limit(100).get();
+                    let encontrados = [];
+                    
+                    allSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.nombre && data.nombre.includes('TEST')) {
+                            encontrados.push({
+                                id: doc.id,
+                                nombre: data.nombre,
+                                descuento: data.descuento || 0,
+                                precio: data.precio
+                            });
+                        }
+                    });
+                    
+                    if (encontrados.length === 0) {
+                        html += '<span class="fail">❌ No se encontraron productos de prueba</span><br>';
+                    } else {
+                        html += `<span class="pass">✅ Encontrados ${encontrados.length} productos de prueba:</span><br><br>`;
+                        encontrados.forEach(p => {
+                            html += `<span class="pass">✅ ${p.nombre}</span><br>`;
+                            html += `&nbsp;&nbsp;- Descuento: ${p.descuento}%<br>`;
+                            html += `&nbsp;&nbsp;- Precio: ₡${p.precio}<br><br>`;
+                        });
+                    }
+                } else {
+                    html += `<span class="pass">✅ Encontrados ${snapshot.size} productos de prueba:</span><br><br>`;
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        html += `<span class="pass">✅ ${data.nombre}</span><br>`;
+                        html += `&nbsp;&nbsp;- ID: ${doc.id}<br>`;
+                        html += `&nbsp;&nbsp;- Descuento: ${data.descuento}%<br>`;
+                        html += `&nbsp;&nbsp;- Precio: ₡${data.precio}<br><br>`;
+                    });
+                }
+                
+            } catch (error) {
+                html += `<span class="fail">❌ Error: ${error.message}</span><br>`;
+            }
+            
+            document.getElementById('result3').innerHTML = html;
+        }
+        
+        // Verificar al cargar
+        window.addEventListener('load', () => {
+            setTimeout(verificarProductos, 500);
+        });
+    </script>
+</body>
+</html>
