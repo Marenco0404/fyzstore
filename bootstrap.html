@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap - Crear Datos de Prueba</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #8a4af3;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border-left: 4px solid #8a4af3;
+        }
+        
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #8a4af3;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #7a3fe0;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: #d32f2f;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #b71c1c;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .status.show {
+            display: block;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ccc;
+            border-top: 2px solid #8a4af3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .log-entry {
+            margin: 3px 0;
+            border-bottom: 1px solid #333;
+            padding: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Bootstrap - Crear Datos de Prueba</h1>
+        
+        <div class="section">
+            <h2>Paso 1: Crear Productos</h2>
+            <p>Crea 5 productos de prueba para la perfumería</p>
+            <button class="btn-primary" onclick="crearProductosPrueba()">
+                ➕ Crear 5 Productos
+            </button>
+            <div id="status-productos" class="status"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Paso 2: Agregar Descuentos</h2>
+            <p>Asigna descuentos a los productos</p>
+            <button class="btn-success" onclick="agregarDescuentosAutomaticos()">
+                💳 Agregar Descuentos (15-30%)
+            </button>
+            <div id="status-descuentos" class="status"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Paso 3: Verificar</h2>
+            <p>Verifica que todo está correcto</p>
+            <button class="btn-primary" onclick="verificarDatos()">
+                ✅ Verificar Datos
+            </button>
+            <div id="status-verificar" class="status"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Paso 4: Limpiar (Opcional)</h2>
+            <p>Si algo sale mal, puedes limpiar todo</p>
+            <button class="btn-danger" onclick="eliminarTodo()">
+                🗑️ Eliminar Todos los Datos
+            </button>
+            <div id="status-limpiar" class="status"></div>
+        </div>
+        
+        <div class="section">
+            <h2>📝 Consola de Ejecución</h2>
+            <div id="log" class="log">
+                <div class="log-entry" style="color: #888;">Consola iniciada...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Inicializar Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGjyNq-CPPy2qWc6dwPGSF6LKAhxBRyDI",
+            authDomain: "fyzstore-8b5f9.firebaseapp.com",
+            projectId: "fyzstore-8b5f9",
+            storageBucket: "fyzstore-8b5f9.appspot.com",
+            messagingSenderId: "1055717929331",
+            appId: "1:1055717929331:web:3e3bcb28bc36c72c1a64f2",
+            measurementId: "G-VBBDX8R8Y1"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // Sistema de logs
+        const logs = [];
+        
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${message}`;
+            logs.push(entry);
+            
+            const logDiv = document.getElementById('log');
+            const newEntry = document.createElement('div');
+            newEntry.className = 'log-entry';
+            newEntry.textContent = entry;
+            logDiv.appendChild(newEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            console.log(message);
+        }
+        
+        function showStatus(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            let spinner = '';
+            if (type === 'info') {
+                spinner = '<div class="spinner"></div>';
+            }
+            el.className = `status show ${type}`;
+            el.innerHTML = `${spinner}${message}`;
+            
+            addLog(message);
+        }
+        
+        // CREAR PRODUCTOS
+        async function crearProductosPrueba() {
+            showStatus('status-productos', 'Creando productos...', 'info');
+            addLog('🚀 Iniciando creación de productos...');
+            
+            try {
+                const productos = [
+                    {
+                        nombre: 'Perfume Rosa Mujer',
+                        precio: 45000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['perfumes', 'mujer'],
+                        descripcion: 'Perfume floral para mujer',
+                        descuento: 0,
+                        tieneDescuento: false
+                    },
+                    {
+                        nombre: 'Perfume Azul Hombre',
+                        precio: 50000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['perfumes', 'hombre'],
+                        descripcion: 'Perfume aventurero para hombre',
+                        descuento: 0,
+                        tieneDescuento: false
+                    },
+                    {
+                        nombre: 'Colonia Fresca Unisex',
+                        precio: 35000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['colonias', 'unisex'],
+                        descripcion: 'Colonia fresca para todos',
+                        descuento: 0,
+                        tieneDescuento: false
+                    },
+                    {
+                        nombre: 'Perfume Premium Floral',
+                        precio: 60000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['perfumes', 'floral'],
+                        descripcion: 'Perfume premium con aroma floral',
+                        descuento: 0,
+                        tieneDescuento: false
+                    },
+                    {
+                        nombre: 'Colonia Deportiva Hombre',
+                        precio: 40000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['colonias', 'hombre'],
+                        descripcion: 'Colonia fresca para actividades deportivas',
+                        descuento: 0,
+                        tieneDescuento: false
+                    }
+                ];
+                
+                let count = 0;
+                for (const p of productos) {
+                    await db.collection('productos').add({
+                        ...p,
+                        fechaCreacion: new Date().toISOString(),
+                        fechaActualizacion: new Date().toISOString()
+                    });
+                    count++;
+                    addLog(`✅ Producto ${count}/5: "${p.nombre}" creado`);
+                }
+                
+                showStatus('status-productos', `✅ ${count} productos creados exitosamente`, 'success');
+                addLog(`✅ ¡Completado! ${count} productos creados`);
+                
+            } catch (error) {
+                showStatus('status-productos', `❌ Error: ${error.message}`, 'error');
+                addLog(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        // AGREGAR DESCUENTOS
+        async function agregarDescuentosAutomaticos() {
+            showStatus('status-descuentos', 'Agregando descuentos...', 'info');
+            addLog('🚀 Iniciando aplicación de descuentos...');
+            
+            try {
+                const snapshot = await db.collection('productos').get();
+                const descuentos = [15, 20, 25, 30, 10];
+                
+                if (snapshot.empty) {
+                    showStatus('status-descuentos', '❌ No hay productos. Primero crea productos.', 'error');
+                    addLog('❌ No hay productos en la base de datos');
+                    return;
+                }
+                
+                let count = 0;
+                for (let i = 0; i < snapshot.docs.length; i++) {
+                    const doc = snapshot.docs[i];
+                    const descuento = descuentos[i % descuentos.length];
+                    const nombre = doc.data().nombre;
+                    
+                    await db.collection('productos').doc(doc.id).update({
+                        descuento: descuento,
+                        tieneDescuento: true,
+                        fechaActualizacion: new Date().toISOString()
+                    });
+                    
+                    count++;
+                    addLog(`✅ ${nombre}: -${descuento}%`);
+                }
+                
+                showStatus('status-descuentos', `✅ ${count} descuentos aplicados`, 'success');
+                addLog(`✅ ¡Completado! ${count} descuentos aplicados`);
+                
+            } catch (error) {
+                showStatus('status-descuentos', `❌ Error: ${error.message}`, 'error');
+                addLog(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        // VERIFICAR DATOS
+        async function verificarDatos() {
+            showStatus('status-verificar', 'Verificando datos...', 'info');
+            addLog('🔍 Verificando base de datos...');
+            
+            try {
+                const snapshot = await db.collection('productos').get();
+                addLog(`\n📊 RESUMEN:`);
+                addLog(`Total de productos: ${snapshot.size}`);
+                
+                let conDescuento = 0;
+                let sinDescuento = 0;
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const nombre = data.nombre || 'Sin nombre';
+                    const precio = data.precio || 0;
+                    const desc = data.descuento || 0;
+                    const tieneDesc = data.tieneDescuento || false;
+                    const subcats = Array.isArray(data.subcategorias) ? data.subcategorias.join(', ') : data.subcategorias;
+                    
+                    if (desc > 0) {
+                        conDescuento++;
+                        addLog(`  ✅ ${nombre}: ₡${precio} (-${desc}%) | tieneDescuento=${tieneDesc} | subcats=[${subcats}]`);
+                    } else {
+                        sinDescuento++;
+                        addLog(`  ⚪ ${nombre}: ₡${precio} | tieneDescuento=${tieneDesc}`);
+                    }
+                });
+                
+                addLog(`\n✅ Con descuento: ${conDescuento}`);
+                addLog(`❌ Sin descuento: ${sinDescuento}`);
+                
+                showStatus('status-verificar', `✅ Verificación completada (${conDescuento} con descuento)`, 'success');
+                
+            } catch (error) {
+                showStatus('status-verificar', `❌ Error: ${error.message}`, 'error');
+                addLog(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        // ELIMINAR TODO
+        async function eliminarTodo() {
+            if (!confirm('⚠️ ¿ELIMINAR TODOS LOS PRODUCTOS? ¡NO SE PUEDE DESHACER!')) return;
+            if (!confirm('⚠️ ¿REALMENTE ESTÁS SEGURO?')) return;
+            
+            showStatus('status-limpiar', 'Eliminando datos...', 'info');
+            addLog('🗑️ Eliminando todos los productos...');
+            
+            try {
+                const snapshot = await db.collection('productos').get();
+                let count = 0;
+                
+                for (const doc of snapshot.docs) {
+                    await db.collection('productos').doc(doc.id).delete();
+                    count++;
+                }
+                
+                showStatus('status-limpiar', `✅ ${count} productos eliminados`, 'success');
+                addLog(`✅ ¡Completado! ${count} productos eliminados`);
+                
+            } catch (error) {
+                showStatus('status-limpiar', `❌ Error: ${error.message}`, 'error');
+                addLog(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        addLog('✅ Bootstrap cargado y listo');
+    </script>
+</body>
+</html>
