@@ -562,6 +562,15 @@ const ProductosSystem = {
             
             // Configurar filtros si existen
             this.configurarFiltros();
+
+            // Renderizar subcategorías dinámicas DESPUÉS de configurarFiltros
+            // (para que no se borren las que cargamos desde Firestore)
+            if (this.categoriaActual === 'perfumeria') {
+                this.renderizarPerfumeriaFiltros();
+            } else if (this.categoriaActual === 'sexshop') {
+                this.renderizarSexshopSubcategorias();
+                this.configurarSexshopCategoriasUI();
+            }
             
         } catch (error) {
             console.error('❌ Error mostrando productos por categoría:', error);
@@ -807,9 +816,8 @@ const ProductosSystem = {
     configurarFiltros: function() {
         // Filtros de subcategoría (en páginas de categoría)
         const categoryFilters = document.getElementById('category-filters');
-        if (categoryFilters) {
-            // Limpiar filtros existentes
-            categoryFilters.innerHTML = '';
+        if (categoryFilters && categoryFilters.children.length === 0) {
+            // Solo llenar si está vacío (si no, ya fue llenado por renderizarPerfumeriaFiltros/renderizarSexshopSubcategorias)
             
             // Agregar "Todas"
             const allBtn = document.createElement('button');
@@ -891,18 +899,21 @@ const ProductosSystem = {
                 return;
             }
 
-            // Mantener el botón "Todas" y agregar las nuevas subcategorías
+            // Preservar el botón "Todas" si existe
             const allBtn = container.querySelector('.filter-btn[data-filter="all"]');
+            const allBtnHTML = allBtn?.outerHTML || '<button class="filter-btn active" data-filter="all">Todas</button>';
+
+            // Crear solo los botones de subcategorías
             const botonsHTML = subcatsPerfumeria.map(sc => {
                 const slug = this.normalizar(sc.slug || sc.nombre);
                 return `<button class="filter-btn" data-filter="${slug}">${sc.nombre || 'Sin nombre'}</button>`;
             }).join('');
 
-            // Limpiar todo excepto "Todas"
-            container.innerHTML = (allBtn ? allBtn.outerHTML : '<button class="filter-btn active" data-filter="all">Todas</button>') + botonsHTML;
+            // Reemplazar contenido pero mantener "Todas"
+            container.innerHTML = allBtnHTML + botonsHTML;
 
             // Reconectar eventos de los botones
-            document.querySelectorAll('.filter-btn').forEach(btn => {
+            document.querySelectorAll('#category-filters .filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
