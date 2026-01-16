@@ -1243,12 +1243,15 @@ const ProductosSystem = {
         this.productosFiltrados = productosFiltrados;
         
         console.log(`📊 Filtrado finalizado: ${productosFiltrados.length} productos a mostrar`);
+        console.log(`🔍 Array productosFiltrados asignado:`, this.productosFiltrados);
         
         // Actualizar contador
         this.actualizarContadorProductos();
         
         // Mostrar resultados
         const container = this.getProductsContainer();
+        console.log(`🎯 Container encontrado:`, container);
+        console.log(`📦 Llamando renderizarProductosGrid con ${productosFiltrados.length} productos`);
         if (container) this.renderizarProductosGrid(productosFiltrados, container);
     },
     
