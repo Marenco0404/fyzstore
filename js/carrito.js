@@ -447,12 +447,5 @@ window.Carrito = {
   }
 };
 
-// Inicializar carrito cuando DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.Carrito && typeof window.Carrito.init === 'function') {
-    window.Carrito.init();
-  }
-});
-
 console.log("✅ [Carrito] Sistema de carrito cargado");
 
