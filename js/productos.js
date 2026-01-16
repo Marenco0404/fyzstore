@@ -1182,6 +1182,20 @@ const ProductosSystem = {
             });
             
             console.log(`📦 Después del filtro: ${productosFiltrados.length} productos`);
+            
+            // ACTUALIZAR EL RANGO DE PRECIO BASADO EN LOS PRODUCTOS FILTRADOS
+            const priceRange = document.getElementById('price-range');
+            if (priceRange && productosFiltrados.length > 0) {
+                const maxPriceFiltrado = Math.max(...productosFiltrados.map(p => p.precio || 0));
+                console.log(`💰 Actualizando rango de precio máximo a: ${maxPriceFiltrado} (basado en ${productosFiltrados.length} productos filtrados)`);
+                priceRange.max = maxPriceFiltrado;
+                priceRange.value = maxPriceFiltrado;
+                
+                const priceMaxEl = document.getElementById('price-max');
+                if (priceMaxEl) {
+                    priceMaxEl.textContent = `${formatCRC(maxPriceFiltrado)}+`;
+                }
+            }
         } else {
             console.log(`📦 Mostrando todos los productos: ${productosFiltrados.length}`);
         }
