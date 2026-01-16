@@ -233,6 +233,27 @@
     <script src="js/firebase-config.js"></script>
 
     <script>
+        // Capturar logs en consola
+        const consoleLogs = [];
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog(args.join(' '), 'info');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog(args.join(' '), 'warning');
+        };
+        
         function showStatus(message, type = 'loading') {
             const statusDiv = document.getElementById('status');
             let spinner = '';
@@ -242,7 +263,30 @@
             statusDiv.innerHTML = `<div class="status ${type}">${spinner}${message}</div>`;
         }
         
+        // Esperar a que Firebase esté disponible
+        let dbAttempts = 0;
+        const waitForDB = setInterval(() => {
+            dbAttempts++;
+            
+            if (typeof db === 'undefined') {
+                if (dbAttempts > 100) {
+                    showStatus('❌ Firebase no se pudo inicializar. Recarga la página.', 'error');
+                    clearInterval(waitForDB);
+                }
+                return;
+            }
+            
+            clearInterval(waitForDB);
+            console.log('✅ Firebase inicializado correctamente');
+        }, 100);
+        
         async function agregarDescuentosPrueba() {
+            if (typeof db === 'undefined') {
+                showStatus('❌ Firestore aún no está listo. Espera un momento...', 'error');
+                setTimeout(agregarDescuentosPrueba, 1000);
+                return;
+            }
+            
             showStatus('Agregando descuentos de prueba...', 'loading');
             
             try {
@@ -275,6 +319,11 @@
         }
         
         async function listarProductosDescuento() {
+            if (typeof db === 'undefined') {
+                showStatus('❌ Firestore aún no está listo', 'error');
+                return;
+            }
+            
             showStatus('Cargando productos con descuento...', 'loading');
             
             try {
@@ -316,6 +365,11 @@
         }
         
         async function agregarDescuentoManual() {
+            if (typeof db === 'undefined') {
+                showStatus('❌ Firestore aún no está listo', 'error');
+                return;
+            }
+            
             const productId = document.getElementById('productId').value;
             const descuentoValue = parseInt(document.getElementById('descuentoValue').value);
             
@@ -343,6 +397,11 @@
         }
         
         async function eliminarTodosDescuentos() {
+            if (typeof db === 'undefined') {
+                showStatus('❌ Firestore aún no está listo', 'error');
+                return;
+            }
+            
             if (!confirm('⚠️ ¿Seguro que quieres eliminar TODOS los descuentos?')) {
                 return;
             }
