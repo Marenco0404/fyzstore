@@ -492,6 +492,7 @@ const ProductosSystem = {
                     producto.precioOriginal = producto.precio;
                     producto.precio = producto.precio * (1 - producto.descuento / 100);
                     producto.tieneDescuento = true;
+                    console.log(`💰 Producto con descuento: ${producto.nombre} (${producto.descuento}% OFF)`);
                 }
                 
                 this.productos.push(producto);
@@ -909,7 +910,13 @@ const ProductosSystem = {
         // Filtro de descuentos
         const discountFilter = document.getElementById('discount-filter');
         if (discountFilter) {
-            discountFilter.addEventListener('change', () => this.aplicarFiltros());
+            console.log('✅ Checkbox de descuentos encontrado y conectado');
+            discountFilter.addEventListener('change', () => {
+                console.log('🔘 Checkbox de descuentos:', discountFilter.checked);
+                this.aplicarFiltros();
+            });
+        } else {
+            console.warn('⚠️ Checkbox de descuentos NO encontrado (#discount-filter)');
         }
     },
 
@@ -1120,7 +1127,10 @@ const ProductosSystem = {
         // Filtrar por descuentos
         const discountFilter = document.getElementById('discount-filter');
         if (discountFilter && discountFilter.checked) {
-            productosFiltrados = productosFiltrados.filter(p => p.tieneDescuento === true);
+            console.log(`🔍 Filtrando por descuentos... ${productosFiltrados.length} productos antes del filtro`);
+            const productosConDescuento = productosFiltrados.filter(p => p.tieneDescuento === true);
+            console.log(`✅ ${productosConDescuento.length} productos con descuento encontrados`);
+            productosFiltrados = productosConDescuento;
         }
         
         // Filtrar por precio máximo (usar precioOriginal si tiene descuento, si no usar precio)
@@ -1169,6 +1179,8 @@ const ProductosSystem = {
         }
         
         this.productosFiltrados = productosFiltrados;
+        
+        console.log(`📊 Filtrado finalizado: ${productosFiltrados.length} productos a mostrar`);
         
         // Actualizar contador
         this.actualizarContadorProductos();
