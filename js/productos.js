@@ -1061,14 +1061,21 @@ const ProductosSystem = {
             filtroSubcat = this.normalizar(this._activeSubcategoria);
         }
         if (filtroSubcat && filtroSubcat !== 'all') {
-            productosFiltrados = productosFiltrados.filter(p => this.normalizar(p.subcategoria) === filtroSubcat);
+            // Filtrar solo si el producto tiene subcategoria definida
+            productosFiltrados = productosFiltrados.filter(p => {
+                const subcatNormalizada = this.normalizar(p.subcategoria || '');
+                return subcatNormalizada === filtroSubcat;
+            });
         }
         
-        // Filtrar por precio máximo
+        // Filtrar por precio máximo (usar precioOriginal si tiene descuento, si no usar precio)
         const priceRange = document.getElementById('price-range');
         if (priceRange) {
             const precioMax = parseInt(priceRange.value);
-            productosFiltrados = productosFiltrados.filter(p => p.precio <= precioMax);
+            productosFiltrados = productosFiltrados.filter(p => {
+                const precioMostrado = p.tieneDescuento ? (p.precioOriginal || p.precio) : p.precio;
+                return precioMostrado <= precioMax;
+            });
         }
         
         // Filtrar por búsqueda
@@ -1076,7 +1083,7 @@ const ProductosSystem = {
         if (searchInput && searchInput.value.trim()) {
             const busqueda = searchInput.value.trim().toLowerCase();
             productosFiltrados = productosFiltrados.filter(p => 
-                p.nombre.toLowerCase().includes(busqueda) || 
+                (p.nombre || '').toLowerCase().includes(busqueda) || 
                 (p.descripcion && p.descripcion.toLowerCase().includes(busqueda)) ||
                 (p.categoria && p.categoria.toLowerCase().includes(busqueda))
             );
@@ -1093,10 +1100,10 @@ const ProductosSystem = {
                     productosFiltrados.sort((a, b) => b.precio - a.precio);
                     break;
                 case 'name-asc':
-                    productosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                    productosFiltrados.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
                     break;
                 case 'name-desc':
-                    productosFiltrados.sort((a, b) => b.nombre.localeCompare(a.nombre));
+                    productosFiltrados.sort((a, b) => (b.nombre || '').localeCompare(a.nombre || ''));
                     break;
                 case 'newest':
                     productosFiltrados.sort((a, b) => 
