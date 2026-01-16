@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Filtro de Descuentos</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/perfumeria.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            border-left: 4px solid #FFD700;
+            padding-left: 15px;
+        }
+        .test-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+        .test-results {
+            background: #1a1a1a;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .test-pass {
+            color: #90EE90;
+        }
+        .test-fail {
+            color: #FF6B6B;
+        }
+        .test-info {
+            color: #87CEEB;
+        }
+        button {
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+        }
+        button:hover {
+            background: #FFC700;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: #FFD700; margin-bottom: 30px;">🧪 Test - Filtro de Descuentos</h1>
+        
+        <div class="test-section">
+            <div class="test-title">1. Verificación de Estructura HTML</div>
+            <div class="test-results" id="test-html"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">2. Verificación de Funciones JavaScript</div>
+            <div class="test-results" id="test-js"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">3. Simulación de Filtrado</div>
+            <button onclick="testFiltrado()">Ejecutar Prueba</button>
+            <div class="test-results" id="test-filtrado"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">4. Estado de Productos</div>
+            <button onclick="mostrarProductos()">Ver Productos Cargados</button>
+            <div class="test-results" id="test-productos"></div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/helpers.js"></script>
+    <script src="js/productos.js"></script>
+    <script>
+        // Test 1: Verificar estructura HTML
+        function testHTML() {
+            let result = '<span class="test-pass">✅ Tests de HTML:</span><br>';
+            
+            const discountFilter = document.getElementById('discount-filter');
+            result += discountFilter ? 
+                '<span class="test-pass">✅</span> Checkbox de descuentos encontrado<br>' :
+                '<span class="test-fail">❌</span> Checkbox de descuentos NO encontrado<br>';
+            
+            const categoryFilters = document.getElementById('category-filters');
+            result += categoryFilters ? 
+                '<span class="test-pass">✅</span> Contenedor de filtros encontrado<br>' :
+                '<span class="test-fail">❌</span> Contenedor de filtros NO encontrado<br>';
+            
+            const priceRange = document.getElementById('price-range');
+            result += priceRange ? 
+                '<span class="test-pass">✅</span> Rango de precio encontrado<br>' :
+                '<span class="test-fail">❌</span> Rango de precio NO encontrado<br>';
+            
+            const sortSelect = document.getElementById('sort-select');
+            result += sortSelect ? 
+                '<span class="test-pass">✅</span> Selector de ordenamiento encontrado<br>' :
+                '<span class="test-fail">❌</span> Selector de ordenamiento NO encontrado<br>';
+            
+            document.getElementById('test-html').innerHTML = result;
+        }
+        
+        // Test 2: Verificar funciones
+        function testJS() {
+            let result = '<span class="test-pass">✅ Tests de JavaScript:</span><br>';
+            
+            result += typeof ProductosSystem === 'object' ? 
+                '<span class="test-pass">✅</span> ProductosSystem existe<br>' :
+                '<span class="test-fail">❌</span> ProductosSystem NO existe<br>';
+            
+            result += typeof ProductosSystem.aplicarFiltros === 'function' ? 
+                '<span class="test-pass">✅</span> aplicarFiltros() existe<br>' :
+                '<span class="test-fail">❌</span> aplicarFiltros() NO existe<br>';
+            
+            result += typeof ProductosSystem.normalizar === 'function' ? 
+                '<span class="test-pass">✅</span> normalizar() existe<br>' :
+                '<span class="test-fail">❌</span> normalizar() NO existe<br>';
+            
+            result += ProductosSystem.productos ? 
+                `<span class="test-pass">✅</span> Array de productos existe (${ProductosSystem.productos.length} productos)<br>` :
+                '<span class="test-fail">❌</span> Array de productos NO existe<br>';
+            
+            document.getElementById('test-js').innerHTML = result;
+        }
+        
+        // Test 3: Simular filtrado
+        function testFiltrado() {
+            let result = '<span class="test-pass">✅ Prueba de Filtrado:</span><br>';
+            
+            const productosConDescuento = ProductosSystem.productos.filter(p => p.tieneDescuento === true);
+            result += `<span class="test-info">ℹ️</span> Productos con descuento: ${productosConDescuento.length}<br>`;
+            
+            if (productosConDescuento.length > 0) {
+                result += `<span class="test-pass">✅</span> Se encontraron productos con descuento:<br>`;
+                productosConDescuento.slice(0, 3).forEach(p => {
+                    result += `<span class="test-info">&nbsp;&nbsp;- ${p.nombre}: ${p.descuento}% OFF (₡${p.precioOriginal} → ₡${p.precio.toFixed(0)})</span><br>`;
+                });
+            } else {
+                result += `<span class="test-fail">❌</span> No hay productos con descuento<br>`;
+            }
+            
+            // Verificar subcategorías
+            result += `<span class="test-info"><br>ℹ️</span> Subcategorías disponibles: ${ProductosSystem.subcategoriasList.length}<br>`;
+            
+            ProductosSystem.subcategoriasList.slice(0, 3).forEach(sc => {
+                const productosEnSubcat = ProductosSystem.productos.filter(p => 
+                    ProductosSystem.normalizar(p.subcategoria) === ProductosSystem.normalizar(sc.nombre)
+                );
+                result += `<span class="test-info">&nbsp;&nbsp;- ${sc.nombre}: ${productosEnSubcat.length} productos</span><br>`;
+            });
+            
+            document.getElementById('test-filtrado').innerHTML = result;
+        }
+        
+        // Test 4: Mostrar productos
+        function mostrarProductos() {
+            let result = '<span class="test-pass">✅ Estado de Productos:</span><br>';
+            
+            result += `<span class="test-info">Total de productos: ${ProductosSystem.productos.length}</span><br>`;
+            result += `<span class="test-info">Productos filtrados: ${ProductosSystem.productosFiltrados.length}</span><br>`;
+            result += `<span class="test-info">Categoría actual: ${ProductosSystem.categoriaActual}</span><br><br>`;
+            
+            result += '<span class="test-info">Primeros 5 productos:</span><br>';
+            ProductosSystem.productos.slice(0, 5).forEach(p => {
+                const descuento = p.tieneDescuento ? `<span class="test-pass">${p.descuento}% OFF</span>` : '';
+                result += `<span class="test-info">&nbsp;&nbsp;- ${p.nombre} | Subcat: ${p.subcategoria} | ${descuento}</span><br>`;
+            });
+            
+            document.getElementById('test-productos').innerHTML = result;
+        }
+        
+        // Ejecutar tests cuando cargue
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testHTML();
+                testJS();
+                testFiltrado();
+                mostrarProductos();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
