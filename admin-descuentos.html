@@ -194,6 +194,9 @@
         <div class="section">
             <h2>📊 Acciones Rápidas</h2>
             <div class="button-group">
+                <button class="btn-primary" onclick="agregarProductosPrueba()">
+                    ➕ Agregar Productos de Prueba
+                </button>
                 <button class="btn-primary" onclick="agregarDescuentosPrueba()">
                     ➕ Agregar Descuentos de Prueba
                 </button>
@@ -273,6 +276,90 @@
             clearInterval(waitForDB);
             console.log('✅ Firebase está disponible');
         }, 100);
+        
+        async function agregarProductosPrueba() {
+            if (typeof db === 'undefined') {
+                showStatus('❌ Firestore aún no está listo', 'error');
+                setTimeout(agregarProductosPrueba, 1000);
+                return;
+            }
+            
+            showStatus('⏳ Agregando productos de prueba...', 'loading');
+            console.log('🔍 Iniciando agregarProductosPrueba...');
+            
+            try {
+                const productosPrueba = [
+                    {
+                        nombre: 'Perfume Rosa Mujer',
+                        precio: 45000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['perfumes', 'mujer'],
+                        descuento: 0
+                    },
+                    {
+                        nombre: 'Perfume Azul Hombre',
+                        precio: 50000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['perfumes', 'hombre'],
+                        descuento: 0
+                    },
+                    {
+                        nombre: 'Colonia Fresca Unisex',
+                        precio: 35000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['colonias', 'unisex'],
+                        descuento: 0
+                    },
+                    {
+                        nombre: 'Perfume Premium Floral',
+                        precio: 60000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['perfumes', 'floral'],
+                        descuento: 0
+                    },
+                    {
+                        nombre: 'Colonia Deportiva Hombre',
+                        precio: 40000,
+                        categoria: 'perfumeria',
+                        subcategorias: ['colonias', 'hombre'],
+                        descuento: 0
+                    }
+                ];
+                
+                let addedCount = 0;
+                
+                for (let i = 0; i < productosPrueba.length; i++) {
+                    const producto = productosPrueba[i];
+                    
+                    try {
+                        console.log(`⏳ Agregando producto ${i + 1}/${productosPrueba.length}: ${producto.nombre}...`);
+                        showStatus(`⏳ Agregando ${i + 1}/${productosPrueba.length}: ${producto.nombre}...`, 'loading');
+                        
+                        // Agregar con un ID automático
+                        const docRef = await db.collection('productos').add(producto);
+                        
+                        console.log(`✅ ${producto.nombre} agregado con ID: ${docRef.id}`);
+                        addedCount++;
+                        
+                    } catch (err) {
+                        console.error(`❌ Error agregando ${producto.nombre}: ${err.message}`);
+                    }
+                }
+                
+                const mensaje = `✅ ${addedCount}/${productosPrueba.length} productos de prueba agregados`;
+                showStatus(mensaje, 'success');
+                console.log(mensaje);
+                
+                // Listar después de 1 segundo
+                setTimeout(() => {
+                    showStatus('📦 Ahora haz clic en "Agregar Descuentos de Prueba"', 'success');
+                }, 1000);
+                
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+                console.error('❌ Error completo:', error);
+            }
+        }
         
         async function agregarDescuentosPrueba() {
             if (typeof db === 'undefined') {
