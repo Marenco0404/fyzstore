@@ -198,13 +198,68 @@
         <div class="container">
             <div class="products-header">
                 <h2 class="products-title">Productos Destacados</h2>
-                <div class="products-filter">
-                    <select class="filter-select" id="sexshop-filter">
-                        <option value="all">Todos los productos</option>
-                        <option value="featured">Destacados</option>
-                        <option value="new">Nuevos</option>
-                        <option value="bestsellers">Más vendidos</option>
+                <div class="view-controls">
+                    <button class="view-btn active" data-view="grid">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="view-btn" data-view="list">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="filters-grid" style="margin-bottom: 30px;">
+                <!-- Descuentos -->
+                <div class="filter-group">
+                    <h3 class="filter-title"><i class="fas fa-tag"></i> Promociones</h3>
+                    <label class="checkbox-filter">
+                        <input type="checkbox" id="discount-filter">
+                        <span>Con Descuento</span>
+                    </label>
+                </div>
+                
+                <!-- Precio -->
+                <div class="filter-group">
+                    <h3 class="filter-title"><i class="fas fa-dollar-sign"></i> Rango de Precio</h3>
+                    <div class="price-filter">
+                        <input type="range" id="price-range" min="0" max="500" step="10" value="500">
+                        <div class="price-labels">
+                            <span>₡0</span>
+                            <span id="price-max">₡500+</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ordenar -->
+                <div class="filter-group">
+                    <h3 class="filter-title"><i class="fas fa-sort"></i> Ordenar por</h3>
+                    <select class="sort-select" id="sort-select">
+                        <option value="default">Predeterminado</option>
+                        <option value="price-asc">Precio: Menor a Mayor</option>
+                        <option value="price-desc">Precio: Mayor a Menor</option>
+                        <option value="name-asc">Nombre: A-Z</option>
+                        <option value="name-desc">Nombre: Z-A</option>
+                        <option value="newest">Más Nuevos</option>
                     </select>
+                </div>
+                
+                <!-- Buscar -->
+                <div class="filter-group">
+                    <h3 class="filter-title"><i class="fas fa-search"></i> Buscar</h3>
+                    <div class="search-filter">
+                        <input type="text" id="product-search" placeholder="Buscar productos...">
+                        <button class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filters-header">
+                <h2 class="filters-title">Resultados</h2>
+                <div class="filters-count" id="products-count">
+                    Mostrando <span id="count-number">0</span> productos
                 </div>
             </div>
             
@@ -214,6 +269,19 @@
                     <div class="loading-spinner"></div>
                     <p>Cargando productos...</p>
                 </div>
+            </div>
+            
+            <!-- Paginación -->
+            <div class="pagination" id="pagination">
+                <button class="page-btn prev" disabled>
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </button>
+                <div class="page-numbers" id="page-numbers">
+                    <span class="page-number active">1</span>
+                </div>
+                <button class="page-btn next">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
             
             <!-- Información de privacidad -->
