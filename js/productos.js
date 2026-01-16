@@ -1199,10 +1199,17 @@ const ProductosSystem = {
         const priceRange = document.getElementById('price-range');
         if (priceRange) {
             const precioMax = parseInt(priceRange.value);
+            console.log(`💰 Filtrando por precio máximo: ${precioMax}`);
+            console.log(`   Productos antes del filtro de precio:`, productosFiltrados.map(p => ({nombre: p.nombre, precio: p.precio})));
+            
             productosFiltrados = productosFiltrados.filter(p => {
                 const precioMostrado = p.tieneDescuento ? (p.precioOriginal || p.precio) : p.precio;
-                return precioMostrado <= precioMax;
+                const pasa = precioMostrado <= precioMax;
+                console.log(`   ${p.nombre}: precio=${precioMostrado}, max=${precioMax}, pasa=${pasa}`);
+                return pasa;
             });
+            
+            console.log(`   Productos después del filtro de precio: ${productosFiltrados.length}`);
         }
         
         // Filtrar por búsqueda
