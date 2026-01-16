@@ -905,7 +905,8 @@ const ProductosSystem = {
 
             // Crear solo los botones de subcategorías
             const botonsHTML = subcatsPerfumeria.map(sc => {
-                const slug = this.normalizar(sc.slug || sc.nombre);
+                // Usar el nombre normalizado como slug para consistencia
+                const slug = this.normalizar(sc.nombre);
                 return `<button class="filter-btn" data-filter="${slug}">${sc.nombre || 'Sin nombre'}</button>`;
             }).join('');
 
@@ -962,7 +963,7 @@ const ProductosSystem = {
 
             // Limpiar y renderizar
             container.innerHTML = subcatsSexyshop.map(sc => {
-                const slug = this.normalizar(sc.slug || sc.nombre);
+                const slug = this.normalizar(sc.nombre);
                 const icon = iconMap[slug] || 'fa-heart';
                 
                 return `
@@ -1060,11 +1061,27 @@ const ProductosSystem = {
         } else if (this._activeSubcategoria) {
             filtroSubcat = this.normalizar(this._activeSubcategoria);
         }
+        
         if (filtroSubcat && filtroSubcat !== 'all') {
-            // Filtrar solo si el producto tiene subcategoria definida
+            // Filtrar: comparar la subcategoría normalizada del producto
+            // Puede venir como nombre o slug
             productosFiltrados = productosFiltrados.filter(p => {
-                const subcatNormalizada = this.normalizar(p.subcategoria || '');
-                return subcatNormalizada === filtroSubcat;
+                // Si el producto tiene subcategoría
+                if (!p.subcategoria) return false;
+                
+                // Normalizar y comparar
+                const subcatProductoNormalizada = this.normalizar(p.subcategoria);
+                
+                // Si coincide directamente, incluir
+                if (subcatProductoNormalizada === filtroSubcat) return true;
+                
+                // Si no, buscar si hay una subcategoría en Firestore que coincida
+                const subcatFirestore = this.subcategoriasList.find(sc => 
+                    this.normalizar(sc.slug || sc.nombre) === filtroSubcat &&
+                    this.normalizar(sc.nombre) === subcatProductoNormalizada
+                );
+                
+                return !!subcatFirestore;
             });
         }
         
