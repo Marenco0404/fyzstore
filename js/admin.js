@@ -1560,6 +1560,10 @@ Tips rápidos:
                     <small style="opacity:.85; display:block; margin-top:6px;">Ej: Hombre, Mujer, Lubricantes, etc.</small>
                 </div>
                 <div class="form-group">
+                    <label>Descripción (opcional)</label>
+                    <textarea id="subcat-descripcion" rows="3" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">${sc?.descripcion || ''}</textarea>
+                </div>
+                <div class="form-group">
                     <label>Estado</label>
                     <select id="subcat-estado">
                         <option value="active" ${(sc?.estado || 'active') === 'active' ? 'selected' : ''}>Activa</option>
@@ -1581,6 +1585,7 @@ Tips rápidos:
         try {
             const cat = document.getElementById('subcat-categoria').value;
             const nombre = document.getElementById('subcat-nombre').value.trim();
+            const descripcion = document.getElementById('subcat-descripcion')?.value.trim() || '';
             const estado = document.getElementById('subcat-estado').value;
             const slug = nombre
                 .toLowerCase()
@@ -1592,6 +1597,7 @@ Tips rápidos:
             const data = {
                 categoria: cat,
                 nombre,
+                descripcion,
                 slug,
                 estado,
                 fechaActualizacion: new Date().toISOString()

@@ -883,7 +883,7 @@ const ProductosSystem = {
 
             // Filtrar subcategorías que pertenecen a "perfumeria"
             const subcatsPerfumeria = this.subcategoriasList
-                .filter(sc => (sc.categoria || '').toLowerCase() === 'perfumeria')
+                .filter(sc => this.normalizar(sc.categoria || '') === this.normalizar('perfumeria'))
                 .filter(sc => sc.estado !== 'inactive');
 
             if (subcatsPerfumeria.length === 0) {
@@ -926,7 +926,7 @@ const ProductosSystem = {
 
             // Filtrar subcategorías que pertenecen a "sexshop"
             const subcatsSexyshop = this.subcategoriasList
-                .filter(sc => (sc.categoria || '').toLowerCase() === 'sexshop' || (sc.categoria || '') === 'sexshop')
+                .filter(sc => this.normalizar(sc.categoria || '') === this.normalizar('sexshop'))
                 .filter(sc => sc.estado !== 'inactive');
 
             if (subcatsSexyshop.length === 0) {
