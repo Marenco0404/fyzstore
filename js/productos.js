@@ -120,6 +120,11 @@ const ProductosSystem = {
             this.configurarSexshopCategoriasUI();
         }
 
+        // Si estamos en Perfumería, pintamos los filtros de subcategorías desde Firestore
+        if (this.categoriaActual === 'perfumeria') {
+            this.renderizarPerfumeriaFiltros();
+        }
+
     },
     
     // Detectar página actual
@@ -865,6 +870,104 @@ const ProductosSystem = {
         const searchInput = document.getElementById('product-search');
         if (searchInput) {
             searchInput.addEventListener('input', () => this.aplicarFiltros());
+        }
+    },
+
+    // Renderizar dinámicamente los filtros de subcategorías de Perfumería desde Firestore
+    renderizarPerfumeriaFiltros: function() {
+        try {
+            if (this.categoriaActual !== 'perfumeria') return;
+
+            const container = document.getElementById('category-filters');
+            if (!container) return;
+
+            // Filtrar subcategorías que pertenecen a "perfumeria"
+            const subcatsPerfumeria = this.subcategoriasList
+                .filter(sc => (sc.categoria || '').toLowerCase() === 'perfumeria')
+                .filter(sc => sc.estado !== 'inactive');
+
+            if (subcatsPerfumeria.length === 0) {
+                console.warn('⚠️ No hay subcategorías de Perfumería en Firestore');
+                return;
+            }
+
+            // Mantener el botón "Todas" y agregar las nuevas subcategorías
+            const allBtn = container.querySelector('.filter-btn[data-filter="all"]');
+            const botonsHTML = subcatsPerfumeria.map(sc => {
+                const slug = this.normalizar(sc.slug || sc.nombre);
+                return `<button class="filter-btn" data-filter="${slug}">${sc.nombre || 'Sin nombre'}</button>`;
+            }).join('');
+
+            // Limpiar todo excepto "Todas"
+            container.innerHTML = (allBtn ? allBtn.outerHTML : '<button class="filter-btn active" data-filter="all">Todas</button>') + botonsHTML;
+
+            // Reconectar eventos de los botones
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.aplicarFiltros();
+                });
+            });
+
+            console.log(`✅ Renderizados ${subcatsPerfumeria.length} filtros de Perfumería`);
+        } catch (err) {
+            console.warn('⚠️ Error renderizando filtros de perfumería:', err);
+        }
+    },
+
+    // Renderizar dinámicamente las subcategorías del Sex Shop desde Firestore
+    renderizarSexshopSubcategorias: function() {
+        try {
+            if (this.categoriaActual !== 'sexshop') return;
+
+            const container = document.querySelector('.categories-grid');
+            if (!container) return;
+
+            // Filtrar subcategorías que pertenecen a "sexshop"
+            const subcatsSexyshop = this.subcategoriasList
+                .filter(sc => (sc.categoria || '').toLowerCase() === 'sexshop' || (sc.categoria || '') === 'sexshop')
+                .filter(sc => sc.estado !== 'inactive');
+
+            if (subcatsSexyshop.length === 0) {
+                console.warn('⚠️ No hay subcategorías de Sex Shop en Firestore');
+                return;
+            }
+
+            // Mapeo de íconos por slug
+            const iconMap = {
+                juguetes: 'fa-heart',
+                lubricantes: 'fa-droplet',
+                saludsexual: 'fa-heart-pulse',
+                lenceria: 'fa-shirt',
+                arosyanillos: 'fa-ring',
+                juegoseroticos: 'fa-dice',
+                vibradores: 'fa-vibrator',
+                consoladores: 'fa-wand-magic-sparkles',
+                estimuladores: 'fa-spark',
+                prendas: 'fa-person',
+                accesorios: 'fa-gift'
+            };
+
+            // Limpiar y renderizar
+            container.innerHTML = subcatsSexyshop.map(sc => {
+                const slug = this.normalizar(sc.slug || sc.nombre);
+                const icon = iconMap[slug] || 'fa-heart';
+                
+                return `
+                    <div class="sexshop-category" data-subcat="${slug}">
+                        <div class="category-icon">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <h3 class="category-name">${sc.nombre || 'Sin nombre'}</h3>
+                        <p class="category-description">${sc.descripcion || ''}</p>
+                    </div>
+                `;
+            }).join('');
+
+            console.log(`✅ Renderizadas ${subcatsSexyshop.length} subcategorías de Sex Shop`);
+        } catch (err) {
+            console.warn('⚠️ Error renderizando subcategorías:', err);
         }
     },
 
