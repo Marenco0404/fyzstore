@@ -302,34 +302,71 @@
                 return;
             }
             
-            showStatus('Agregando descuentos de prueba...', 'loading');
+            showStatus('⏳ Agregando descuentos de prueba...', 'loading');
+            console.log('🔍 Iniciando agregarDescuentosPrueba...');
             
             try {
+                console.log('📦 Buscando productos (con timeout de 10s)...');
+                
+                // Crear timeout para la query
+                let timedOut = false;
+                const timeoutId = setTimeout(() => {
+                    timedOut = true;
+                    showStatus('❌ Timeout: La consulta tardó demasiado. Verifica tu conexión', 'error');
+                    console.error('❌ Timeout esperando productos de Firestore');
+                }, 10000);
+                
                 // Obtener algunos productos
                 const snapshot = await db.collection('productos').limit(5).get();
-                let count = 0;
+                clearTimeout(timeoutId);
                 
-                const descuentos = [15, 20, 25, 30, 10];
-                let idx = 0;
+                if (timedOut) return;
                 
-                for (const doc of snapshot.docs) {
-                    const descuento = descuentos[idx % descuentos.length];
-                    
-                    await db.collection('productos').doc(doc.id).update({
-                        descuento: descuento
-                    });
-                    
-                    console.log(`✅ Descuento de ${descuento}% agregado a ${doc.data().nombre}`);
-                    count++;
-                    idx++;
+                if (snapshot.empty) {
+                    showStatus('❌ No hay productos en la base de datos. Primero agrega productos.', 'error');
+                    console.log('❌ La colección de productos está vacía');
+                    return;
                 }
                 
-                showStatus(`✅ ${count} productos actualizados con descuentos de prueba`, 'success');
-                listarProductosDescuento();
+                console.log(`✅ ${snapshot.size} productos encontrados`);
+                showStatus(`✅ ${snapshot.size} productos encontrados, agregando descuentos...`, 'loading');
+                
+                const descuentos = [15, 20, 25, 30, 10];
+                let successCount = 0;
+                let errorCount = 0;
+                
+                // Actualizar cada producto secuencialmente
+                for (let i = 0; i < snapshot.docs.length; i++) {
+                    const doc = snapshot.docs[i];
+                    const descuento = descuentos[i % descuentos.length];
+                    
+                    try {
+                        console.log(`⏳ Actualizando producto ${i + 1}/${snapshot.size}: ${doc.data().nombre}...`);
+                        showStatus(`⏳ Actualizando ${i + 1}/${snapshot.size}: ${doc.data().nombre}...`, 'loading');
+                        
+                        await db.collection('productos').doc(doc.id).update({
+                            descuento: descuento
+                        });
+                        
+                        console.log(`✅ ${doc.data().nombre}: descuento de ${descuento}% agregado`);
+                        successCount++;
+                        
+                    } catch (err) {
+                        console.error(`❌ Error en ${doc.id}: ${err.message}`);
+                        errorCount++;
+                    }
+                }
+                
+                const mensaje = `✅ ${successCount}/${snapshot.size} productos actualizados${errorCount > 0 ? ` (${errorCount} errores)` : ''}`;
+                showStatus(mensaje, 'success');
+                console.log(mensaje);
+                
+                // Listar después de 1 segundo
+                setTimeout(listarProductosDescuento, 1000);
                 
             } catch (error) {
                 showStatus(`❌ Error: ${error.message}`, 'error');
-                console.error(error);
+                console.error('❌ Error completo:', error);
             }
         }
         
