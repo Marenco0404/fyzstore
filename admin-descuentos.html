@@ -229,8 +229,23 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
-    <!-- Config -->
-    <script src="js/firebase-config.js"></script>
+    <script>
+        // Inicializar Firebase directamente
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGjyNq-CPPy2qWc6dwPGSF6LKAhxBRyDI",
+            authDomain: "fyzstore-8b5f9.firebaseapp.com",
+            projectId: "fyzstore-8b5f9",
+            storageBucket: "fyzstore-8b5f9.appspot.com",
+            messagingSenderId: "1055717929331",
+            appId: "1:1055717929331:web:3e3bcb28bc36c72c1a64f2",
+            measurementId: "G-VBBDX8R8Y1"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        console.log('✅ Firebase inicializado directamente en admin-descuentos.html');
+    </script>
 
     <script>
         // Capturar logs en consola
@@ -269,7 +284,7 @@
             dbAttempts++;
             
             if (typeof db === 'undefined') {
-                if (dbAttempts > 100) {
+                if (dbAttempts > 10) {
                     showStatus('❌ Firebase no se pudo inicializar. Recarga la página.', 'error');
                     clearInterval(waitForDB);
                 }
@@ -277,7 +292,7 @@
             }
             
             clearInterval(waitForDB);
-            console.log('✅ Firebase inicializado correctamente');
+            console.log('✅ Firebase está disponible');
         }, 100);
         
         async function agregarDescuentosPrueba() {
