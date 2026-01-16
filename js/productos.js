@@ -905,6 +905,12 @@ const ProductosSystem = {
         if (searchInput) {
             searchInput.addEventListener('input', () => this.aplicarFiltros());
         }
+
+        // Filtro de descuentos
+        const discountFilter = document.getElementById('discount-filter');
+        if (discountFilter) {
+            discountFilter.addEventListener('change', () => this.aplicarFiltros());
+        }
     },
 
     // Renderizar dinámicamente los filtros de subcategorías de Perfumería desde Firestore
@@ -1109,6 +1115,12 @@ const ProductosSystem = {
                 
                 return !!subcatFirestore;
             });
+        }
+
+        // Filtrar por descuentos
+        const discountFilter = document.getElementById('discount-filter');
+        if (discountFilter && discountFilter.checked) {
+            productosFiltrados = productosFiltrados.filter(p => p.tieneDescuento === true);
         }
         
         // Filtrar por precio máximo (usar precioOriginal si tiene descuento, si no usar precio)
