@@ -495,19 +495,31 @@ const ProductosSystem = {
                     console.log(`💰 Producto con descuento: ${producto.nombre} (${producto.descuento}% OFF)`);
                     
                     // Agregar "Con Descuento" como subcategoría adicional
-                    // Soporta tanto string como array
+                    // Primero, normalizar subcategorias a un array
+                    let subcategoriasActuales = [];
+                    
+                    // Recopilar subcategorías actuales (pueden venir como array o string)
                     if (Array.isArray(producto.subcategorias)) {
-                        // Si ya es array, agregar "Con Descuento" si no existe
-                        if (!producto.subcategorias.includes('Con Descuento')) {
-                            producto.subcategorias.push('Con Descuento');
-                        }
-                    } else if (typeof producto.subcategoria === 'string') {
-                        // Si subcategoria es string, crear array con ambas
-                        producto.subcategorias = [producto.subcategoria, 'Con Descuento'];
-                    } else {
-                        // Si no tiene subcategoría, solo "Con Descuento"
-                        producto.subcategorias = ['Con Descuento'];
+                        subcategoriasActuales = [...producto.subcategorias];
+                    } else if (typeof producto.subcategorias === 'string' && producto.subcategorias.trim()) {
+                        subcategoriasActuales = [producto.subcategorias];
                     }
+                    
+                    // También considerar el campo subcategoria (string)
+                    if (producto.subcategoria && typeof producto.subcategoria === 'string' && producto.subcategoria.trim()) {
+                        if (!subcategoriasActuales.includes(producto.subcategoria)) {
+                            subcategoriasActuales.push(producto.subcategoria);
+                        }
+                    }
+                    
+                    // Agregar "Con Descuento" si no existe
+                    if (!subcategoriasActuales.includes('Con Descuento')) {
+                        subcategoriasActuales.push('Con Descuento');
+                    }
+                    
+                    // Guardar el array normalizado
+                    producto.subcategorias = subcategoriasActuales;
+                    console.log(`  → Subcategorías asignadas: ${subcategoriasActuales.join(', ')}`);
                 }
                 
                 this.productos.push(producto);
@@ -946,24 +958,31 @@ const ProductosSystem = {
                 .filter(sc => this.normalizar(sc.categoria || '') === this.normalizar('perfumeria'))
                 .filter(sc => sc.estado !== 'inactive');
 
-            if (subcatsPerfumeria.length === 0) {
-                console.warn('⚠️ No hay subcategorías de Perfumería en Firestore');
-                return;
-            }
-
             // Preservar el botón "Todas" si existe
             const allBtn = container.querySelector('.filter-btn[data-filter="all"]');
             const allBtnHTML = allBtn?.outerHTML || '<button class="filter-btn active" data-filter="all">Todas</button>';
 
-            // Crear solo los botones de subcategorías
-            const botonsHTML = subcatsPerfumeria.map(sc => {
-                // Usar el nombre normalizado como slug para consistencia
-                const slug = this.normalizar(sc.nombre);
-                return `<button class="filter-btn" data-filter="${slug}">${sc.nombre || 'Sin nombre'}</button>`;
-            }).join('');
+            // Crear los botones de subcategorías
+            let botonsHTML = '';
+            if (subcatsPerfumeria.length > 0) {
+                botonsHTML = subcatsPerfumeria.map(sc => {
+                    // Usar el nombre normalizado como slug para consistencia
+                    const slug = this.normalizar(sc.nombre);
+                    return `<button class="filter-btn" data-filter="${slug}">${sc.nombre || 'Sin nombre'}</button>`;
+                }).join('');
+            }
 
-            // Reemplazar contenido pero mantener "Todas"
-            container.innerHTML = allBtnHTML + botonsHTML;
+            // Agregar botón "Con Descuento" si hay productos con descuento
+            const productosConDescuento = this.productos.filter(p => p.tieneDescuento === true);
+            let conDescuentoHTML = '';
+            if (productosConDescuento.length > 0) {
+                const slug = this.normalizar('Con Descuento');
+                conDescuentoHTML = `<button class="filter-btn" data-filter="${slug}">Con Descuento</button>`;
+                console.log(`💳 Botón "Con Descuento" agregado. Slug normalizado: "${slug}", Productos con descuento: ${productosConDescuento.length}`);
+            }
+
+            // Reemplazar contenido pero mantener "Todas" y agregar "Con Descuento"
+            container.innerHTML = allBtnHTML + botonsHTML + conDescuentoHTML;
 
             // Reconectar eventos de los botones
             document.querySelectorAll('#category-filters .filter-btn').forEach(btn => {
@@ -974,7 +993,7 @@ const ProductosSystem = {
                 });
             });
 
-            console.log(`✅ Renderizados ${subcatsPerfumeria.length} filtros de Perfumería`);
+            console.log(`✅ Renderizados ${subcatsPerfumeria.length} filtros de Perfumería + ${productosConDescuento.length} productos con descuento`);
         } catch (err) {
             console.warn('⚠️ Error renderizando filtros de perfumería:', err);
         }
@@ -1114,7 +1133,11 @@ const ProductosSystem = {
             filtroSubcat = this.normalizar(this._activeSubcategoria);
         }
         
+        console.log(`🔍 Filtro activo: "${filtroSubcat}" (botón: ${categoriaActiva?.textContent}, data-filter: ${categoriaActiva?.dataset.filter})`);
+        
         if (filtroSubcat && filtroSubcat !== 'all') {
+            console.log(`📋 Aplicando filtro "${filtroSubcat}" a ${productosFiltrados.length} productos...`);
+            
             // Filtrar: comparar la subcategoría normalizada del producto
             // Soporta tanto string (subcategoria) como array (subcategorias)
             productosFiltrados = productosFiltrados.filter(p => {
@@ -1138,8 +1161,18 @@ const ProductosSystem = {
                 
                 // Normalizar todas las subcategorías y buscar coincidencia
                 const subcatNormalizadas = subcategorias.map(s => this.normalizar(s));
-                return subcatNormalizadas.includes(filtroSubcat);
+                const match = subcatNormalizadas.includes(filtroSubcat);
+                
+                if (filtroSubcat === 'condescuento' && match) {
+                    console.log(`✅ ${p.nombre}: coincide con "condescuento" (subcategorias: ${subcategorias.join(', ')})`);
+                }
+                
+                return match;
             });
+            
+            console.log(`📦 Después del filtro: ${productosFiltrados.length} productos`);
+        } else {
+            console.log(`📦 Mostrando todos los productos: ${productosFiltrados.length}`);
         }
 
         // Filtrar por descuentos

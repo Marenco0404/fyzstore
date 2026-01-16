@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Simple - Descuentos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #333;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+        }
+        .ok {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        pre {
+            background: #333;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Simple - Sistema de Descuentos</h1>
+        
+        <div id="results"></div>
+    </div>
+
+    <!-- Scripts en el mismo orden que perfumeria.html -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
+    
+    <script src="js/helpers.js" defer></script>
+    <script src="js/performance-config.js" defer></script>
+    <script src="js/firebase-config.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/carrito.js" defer></script>
+    <script src="js/productos.js" defer></script>
+    <script src="js/app.js" defer></script>
+
+    <script>
+        let results = [];
+        
+        function addResult(title, content, isOk = true) {
+            results.push({ title, content, isOk });
+            updateUI();
+        }
+        
+        function updateUI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = results.map(r => `
+                <div class="test">
+                    <h3>${r.title}</h3>
+                    <p class="${r.isOk ? 'ok' : 'error'}">${r.content}</p>
+                </div>
+            `).join('');
+        }
+        
+        // Esperar a que ProductosSystem esté disponible
+        const checkInterval = setInterval(() => {
+            if (typeof ProductosSystem !== 'undefined') {
+                clearInterval(checkInterval);
+                runTests();
+            }
+        }, 100);
+        
+        function runTests() {
+            addResult('ProductosSystem Disponible', 'ProductosSystem está cargado', true);
+            
+            // Test 1: Verificar si _initialized es true
+            addResult('ProductosSystem.init() fue llamado', 
+                `_initialized = ${ProductosSystem._initialized}`,
+                ProductosSystem._initialized
+            );
+            
+            // Test 2: Verificar si categoriaActual fue detectado
+            addResult('Página Detectada', 
+                `categoriaActual = "${ProductosSystem.categoriaActual}"`,
+                ProductosSystem.categoriaActual === 'perfumeria'
+            );
+            
+            // Test 3: Verificar productos cargados
+            addResult('Productos Cargados', 
+                `Total: ${ProductosSystem.productos.length} productos`,
+                ProductosSystem.productos.length > 0
+            );
+            
+            // Test 4: Productos con descuento
+            const productosDescuento = ProductosSystem.productos.filter(p => p.tieneDescuento === true);
+            addResult('Productos con Descuento Detectados', 
+                `Total: ${productosDescuento.length} productos con descuento`,
+                productosDescuento.length > 0
+            );
+            
+            if (productosDescuento.length > 0) {
+                // Test 5: Revisar estructura de productos con descuento
+                const primero = productosDescuento[0];
+                const info = `
+Nombre: ${primero.nombre}
+Descuento: ${primero.descuento}%
+tieneDescuento: ${primero.tieneDescuento}
+subcategoria: ${primero.subcategoria}
+subcategorias: ${Array.isArray(primero.subcategorias) ? primero.subcategorias.join(', ') : 'N/A'}
+                `.trim();
+                addResult('Estructura de Producto con Descuento', `<pre>${info}</pre>`, true);
+            }
+            
+            // Test 6: Verificar botón "Con Descuento" en la página
+            setTimeout(() => {
+                const botonDescuento = document.querySelector('[data-filter="condescuento"]');
+                addResult('Botón "Con Descuento" en la Página', 
+                    botonDescuento ? 'Botón ENCONTRADO en el DOM' : 'Botón NO encontrado en el DOM',
+                    botonDescuento !== null
+                );
+                
+                // Test 7: Subcategorías en Firestore
+                if (ProductosSystem.subcategoriasList && ProductosSystem.subcategoriasList.length > 0) {
+                    const perfs = ProductosSystem.subcategoriasList.filter(s => 
+                        ProductosSystem.normalizar(s.categoria || '') === 'perfumeria'
+                    );
+                    addResult('Subcategorías de Perfumería en Firestore', 
+                        `Total: ${perfs.length}\n${perfs.map(s => s.nombre).join(', ')}`,
+                        perfs.length > 0
+                    );
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

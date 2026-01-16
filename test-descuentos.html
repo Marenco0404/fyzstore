@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Sistema Completo de Descuentos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0e27;
+            color: #00ff88;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { margin-bottom: 20px; color: #00ffff; }
+        .test-section {
+            background: #1a1f3a;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #00ff88;
+            border-radius: 4px;
+        }
+        .test-title { color: #ffaa00; font-weight: bold; }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #0f1428;
+            border-radius: 3px;
+        }
+        .ok { color: #00ff88; }
+        .error { color: #ff4444; }
+        .info { color: #00ccff; }
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover { background: #00dd77; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Completo - Sistema de Descuentos</h1>
+        <div id="tests"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
+    <script src="js/firebase-config.js" defer></script>
+    <script src="js/helpers.js" defer></script>
+    <script src="js/performance-config.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/carrito.js" defer></script>
+    <script src="js/productos.js" defer></script>
+    <script src="js/app.js" defer></script>
+
+    <script>
+        let testResults = [];
+        
+        function addTest(name, check, details = '') {
+            const passed = typeof check === 'function' ? check() : check;
+            testResults.push({ name, passed, details });
+            renderTests();
+        }
+        
+        function renderTests() {
+            const testsDiv = document.getElementById('tests');
+            testsDiv.innerHTML = testResults.map((test, i) => `
+                <div class="test-section">
+                    <div class="test-title">${i + 1}. ${test.name}</div>
+                    <div class="test-result">
+                        <span class="${test.passed ? 'ok' : 'error'}">
+                            ${test.passed ? '✅ PASÓ' : '❌ FALLÓ'}
+                        </span>
+                        ${test.details ? `<div class="info" style="margin-top: 5px;">${test.details}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Esperar a que ProductosSystem esté disponible
+        let attempts = 0;
+        const waitForPS = setInterval(() => {
+            attempts++;
+            
+            if (typeof ProductosSystem === 'undefined') {
+                if (attempts > 50) {
+                    addTest('ProductosSystem Disponible', false, '❌ Timeout esperando ProductosSystem');
+                    clearInterval(waitForPS);
+                }
+                return;
+            }
+            
+            clearInterval(waitForPS);
+            
+            // Cambiar a perfumería para las pruebas
+            ProductosSystem.categoriaActual = 'perfumeria';
+            
+            // Test 1: ProductosSystem cargado
+            addTest(
+                'ProductosSystem Disponible',
+                true,
+                `✅ ProductosSystem está listo. _initialized = ${ProductosSystem._initialized}`
+            );
+            
+            // Esperar un poco para que los productos se carguen
+            setTimeout(() => {
+                // Test 2: Productos cargados
+                const hasProducts = ProductosSystem.productos.length > 0;
+                addTest(
+                    'Productos Cargados de Firestore',
+                    hasProducts,
+                    `${ProductosSystem.productos.length} productos cargados`
+                );
+                
+                // Test 3: Productos con descuento
+                const withDiscount = ProductosSystem.productos.filter(p => p.tieneDescuento === true);
+                addTest(
+                    'Productos con Descuento Detectados',
+                    withDiscount.length > 0,
+                    `${withDiscount.length} productos tienen tieneDescuento = true`
+                );
+                
+                if (withDiscount.length > 0) {
+                    // Test 4: Estructura de producto con descuento
+                    const p = withDiscount[0];
+                    const hasSubcategorias = Array.isArray(p.subcategorias);
+                    const hasConDescuento = hasSubcategorias && p.subcategorias.includes('Con Descuento');
+                    
+                    addTest(
+                        'Estructura de Producto con Descuento',
+                        hasConDescuento,
+                        `${p.nombre}: subcategorias = [${p.subcategorias.join(', ')}]`
+                    );
+                    
+                    // Test 5: Normalización funciona
+                    const normalized = ProductosSystem.normalizar('Con Descuento');
+                    const isCorrect = normalized === 'condescuento';
+                    addTest(
+                        'Normalización de "Con Descuento"',
+                        isCorrect,
+                        `normalizar('Con Descuento') = '${normalized}'`
+                    );
+                }
+                
+                // Test 6: Botón visible en la página
+                setTimeout(() => {
+                    const button = document.querySelector('[data-filter="condescuento"]');
+                    addTest(
+                        'Botón "Con Descuento" Visible',
+                        button !== null,
+                        button ? `✅ Botón encontrado: ${button.textContent}` : '❌ Botón no encontrado en el DOM'
+                    );
+                    
+                    // Test 7: Funciona el click del botón
+                    if (button) {
+                        addTest(
+                            'Click en Botón Funciona',
+                            true,
+                            'Clicking botón "Con Descuento"...'
+                        );
+                        
+                        button.click();
+                        
+                        setTimeout(() => {
+                            const filtered = ProductosSystem.productosFiltrados;
+                            const allHaveDiscount = filtered.every(p => p.tieneDescuento === true);
+                            addTest(
+                                'Filtro Muestra Solo Descuentos',
+                                allHaveDiscount && filtered.length > 0,
+                                `${filtered.length} productos mostrados, todos con descuento: ${allHaveDiscount}`
+                            );
+                        }, 500);
+                    }
+                }, 500);
+            }, 2000);
+        }, 100);
+    </script>
+</body>
+</html>
