@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico - Estructura de Descuentos</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+            font-family: monospace;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 40px;
+            border-left: 4px solid #FFD700;
+            padding-left: 15px;
+        }
+        .title {
+            font-size: 1.3rem;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+        button {
+            background: #FFD700;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+        }
+        button:hover {
+            background: #FFC700;
+        }
+        .results {
+            background: #1a1a1a;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .pass { color: #90EE90; }
+        .fail { color: #FF6B6B; }
+        .info { color: #87CEEB; }
+        .warn { color: #FFD700; }
+        pre {
+            background: #0a0a0a;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #FFD700; margin-bottom: 30px;">🔍 Diagnóstico - Estructura de Descuentos</h1>
+        
+        <div class="section">
+            <div class="title">1. Analizar Estructura de Productos con Descuento</div>
+            <button onclick="analizarProductosConDescuento()">Analizar</button>
+            <div class="results" id="result1"></div>
+        </div>
+        
+        <div class="section">
+            <div class="title">2. Ver Cómo Están Guardados los Campos</div>
+            <button onclick="verEstructuraCompleta()">Ver Estructura</button>
+            <div class="results" id="result2"></div>
+        </div>
+        
+        <div class="section">
+            <div class="title">3. Implementar: Agregar "Con Descuento" como Subcategoría</div>
+            <button onclick="implementarDescuentoComoSubcategoria()">Agregar "Con Descuento" a Productos</button>
+            <div class="results" id="result3"></div>
+        </div>
+
+        <div class="section">
+            <div class="title">4. Verificar Cambios Implementados</div>
+            <button onclick="verificarCambios()">Verificar</button>
+            <div class="results" id="result4"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        async function analizarProductosConDescuento() {
+            let html = '<span class="info">🔄 Analizando...</span><br><br>';
+            
+            try {
+                const snapshot = await db.collection('productos').limit(100).get();
+                const conDescuento = [];
+                const sinDescuento = [];
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.descuento && data.descuento > 0) {
+                        conDescuento.push(data);
+                    } else {
+                        sinDescuento.push(data);
+                    }
+                });
+                
+                html += `<span class="pass">✅ Productos con descuento: ${conDescuento.length}</span><br>`;
+                html += `<span class="fail">❌ Productos sin descuento: ${sinDescuento.length}</span><br><br>`;
+                
+                if (conDescuento.length > 0) {
+                    html += '<span class="warn">📌 PRIMEROS 3 PRODUCTOS CON DESCUENTO:</span><br><br>';
+                    conDescuento.slice(0, 3).forEach((p, i) => {
+                        html += `<span class="info">▶ Producto ${i + 1}:</span><br>`;
+                        html += `  • Nombre: ${p.nombre}<br>`;
+                        html += `  • Descuento: ${p.descuento}%<br>`;
+                        html += `  • Subcategoría (actual): <span class="warn">"${p.subcategoria}"</span><br>`;
+                        html += `  • Campo subcategoria es string? ${typeof p.subcategoria === 'string' ? '✅ SÍ' : '❌ NO'}<br>`;
+                        html += `  • Es un array? ${Array.isArray(p.subcategoria) ? '✅ SÍ' : '❌ NO'}<br><br>`;
+                    });
+                } else {
+                    html += '<span class="fail">⚠️ NO HAY PRODUCTOS CON DESCUENTO</span><br>';
+                }
+                
+            } catch (error) {
+                html += `<span class="fail">❌ Error: ${error.message}</span>`;
+            }
+            
+            document.getElementById('result1').innerHTML = html;
+        }
+
+        async function verEstructuraCompleta() {
+            let html = '<span class="info">🔄 Obteniendo estructura...</span><br><br>';
+            
+            try {
+                const snapshot = await db.collection('productos').limit(1).get();
+                
+                if (snapshot.size === 0) {
+                    html += '<span class="fail">❌ No hay productos</span>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        html += '<span class="pass">✅ Estructura de un producto:</span><br><br>';
+                        html += '<pre>' + JSON.stringify(data, null, 2) + '</pre><br>';
+                        
+                        html += '<span class="warn">🔍 Análisis:</span><br>';
+                        html += `• subcategoria es: <span class="info">${typeof data.subcategoria}</span><br>`;
+                        html += `• Valor: <span class="info">"${data.subcategoria}"</span><br>`;
+                        html += `• Tiene descuento? ${data.descuento > 0 ? '✅ SÍ (' + data.descuento + '%)' : '❌ NO'}<br>`;
+                    });
+                }
+                
+            } catch (error) {
+                html += `<span class="fail">❌ Error: ${error.message}</span>`;
+            }
+            
+            document.getElementById('result2').innerHTML = html;
+        }
+
+        async function implementarDescuentoComoSubcategoria() {
+            let html = '<span class="info">🔄 Implementando cambio...</span><br><br>';
+            
+            try {
+                const snapshot = await db.collection('productos').limit(100).get();
+                let actualizados = 0;
+                
+                for (const doc of snapshot.docs) {
+                    const data = doc.data();
+                    
+                    // Si tiene descuento y la subcategoría es string
+                    if (data.descuento && data.descuento > 0 && typeof data.subcategoria === 'string') {
+                        // Agregar "Con Descuento" como subcategoría adicional
+                        const nuevasSubcategorias = [data.subcategoria, 'Con Descuento'];
+                        
+                        await db.collection('productos').doc(doc.id).update({
+                            subcategorias: nuevasSubcategorias
+                        });
+                        
+                        actualizados++;
+                        html += `<span class="pass">✅ ${data.nombre}</span><br>`;
+                        html += `&nbsp;&nbsp;Subcategorías: [${nuevasSubcategorias.join(', ')}]<br><br>`;
+                    }
+                }
+                
+                html += `<br><span class="pass">✅ TOTAL ACTUALIZADOS: ${actualizados} productos</span><br>`;
+                html += '<span class="warn">💡 Ahora el campo es "subcategorias" (plural) con array de valores</span><br>';
+                
+            } catch (error) {
+                html += `<span class="fail">❌ Error: ${error.message}</span>`;
+            }
+            
+            document.getElementById('result3').innerHTML = html;
+        }
+
+        async function verificarCambios() {
+            let html = '<span class="info">🔄 Verificando...</span><br><br>';
+            
+            try {
+                const snapshot = await db.collection('productos').limit(100).get();
+                const conDescuentoActualizado = [];
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (Array.isArray(data.subcategorias) && data.subcategorias.includes('Con Descuento')) {
+                        conDescuentoActualizado.push(data);
+                    }
+                });
+                
+                if (conDescuentoActualizado.length > 0) {
+                    html += `<span class="pass">✅ ENCONTRADOS: ${conDescuentoActualizado.length} productos con "Con Descuento"</span><br><br>`;
+                    
+                    conDescuentoActualizado.slice(0, 3).forEach((p, i) => {
+                        html += `<span class="info">▶ ${p.nombre}</span><br>`;
+                        html += `&nbsp;&nbsp;Subcategorías: [${p.subcategorias.join(', ')}]<br>`;
+                        html += `&nbsp;&nbsp;Descuento: ${p.descuento}%<br><br>`;
+                    });
+                } else {
+                    html += '<span class="fail">❌ No se encontraron productos actualizados</span><br>';
+                }
+                
+            } catch (error) {
+                html += `<span class="fail">❌ Error: ${error.message}</span>`;
+            }
+            
+            document.getElementById('result4').innerHTML = html;
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(analizarProductosConDescuento, 500);
+        });
+    </script>
+</body>
+</html>

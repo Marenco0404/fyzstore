@@ -493,6 +493,21 @@ const ProductosSystem = {
                     producto.precio = producto.precio * (1 - producto.descuento / 100);
                     producto.tieneDescuento = true;
                     console.log(`💰 Producto con descuento: ${producto.nombre} (${producto.descuento}% OFF)`);
+                    
+                    // Agregar "Con Descuento" como subcategoría adicional
+                    // Soporta tanto string como array
+                    if (Array.isArray(producto.subcategorias)) {
+                        // Si ya es array, agregar "Con Descuento" si no existe
+                        if (!producto.subcategorias.includes('Con Descuento')) {
+                            producto.subcategorias.push('Con Descuento');
+                        }
+                    } else if (typeof producto.subcategoria === 'string') {
+                        // Si subcategoria es string, crear array con ambas
+                        producto.subcategorias = [producto.subcategoria, 'Con Descuento'];
+                    } else {
+                        // Si no tiene subcategoría, solo "Con Descuento"
+                        producto.subcategorias = ['Con Descuento'];
+                    }
                 }
                 
                 this.productos.push(producto);
@@ -907,16 +922,14 @@ const ProductosSystem = {
             searchInput.addEventListener('input', () => this.aplicarFiltros());
         }
 
-        // Filtro de descuentos
+        // Filtro de descuentos (DESHABILITADO - ahora "Con Descuento" es una subcategoría)
+        // Los productos con descuento aparecerán automáticamente al hacer clic en "Con Descuento"
         const discountFilter = document.getElementById('discount-filter');
         if (discountFilter) {
-            console.log('✅ Checkbox de descuentos encontrado y conectado');
+            console.log('✅ Checkbox de descuentos encontrado (deshabilitado - filtrado por subcategoría)');
             discountFilter.addEventListener('change', () => {
-                console.log('🔘 Checkbox de descuentos:', discountFilter.checked);
-                this.aplicarFiltros();
+                console.log('🔘 Nota: El filtro de descuentos ahora se maneja como subcategoría "Con Descuento"');
             });
-        } else {
-            console.warn('⚠️ Checkbox de descuentos NO encontrado (#discount-filter)');
         }
     },
 
@@ -1103,24 +1116,29 @@ const ProductosSystem = {
         
         if (filtroSubcat && filtroSubcat !== 'all') {
             // Filtrar: comparar la subcategoría normalizada del producto
-            // Puede venir como nombre o slug
+            // Soporta tanto string (subcategoria) como array (subcategorias)
             productosFiltrados = productosFiltrados.filter(p => {
-                // Si el producto tiene subcategoría
-                if (!p.subcategoria) return false;
+                // Obtener subcategorías (puede ser string, array, o ambas)
+                let subcategorias = [];
                 
-                // Normalizar y comparar
-                const subcatProductoNormalizada = this.normalizar(p.subcategoria);
+                // Agregar desde campo subcategorias (array)
+                if (Array.isArray(p.subcategorias)) {
+                    subcategorias = [...p.subcategorias];
+                }
                 
-                // Si coincide directamente, incluir
-                if (subcatProductoNormalizada === filtroSubcat) return true;
+                // Agregar desde campo subcategoria (string)
+                if (p.subcategoria && typeof p.subcategoria === 'string') {
+                    if (!subcategorias.includes(p.subcategoria)) {
+                        subcategorias.push(p.subcategoria);
+                    }
+                }
                 
-                // Si no, buscar si hay una subcategoría en Firestore que coincida
-                const subcatFirestore = this.subcategoriasList.find(sc => 
-                    this.normalizar(sc.slug || sc.nombre) === filtroSubcat &&
-                    this.normalizar(sc.nombre) === subcatProductoNormalizada
-                );
+                // Si no hay subcategorías, no incluir
+                if (subcategorias.length === 0) return false;
                 
-                return !!subcatFirestore;
+                // Normalizar todas las subcategorías y buscar coincidencia
+                const subcatNormalizadas = subcategorias.map(s => this.normalizar(s));
+                return subcatNormalizadas.includes(filtroSubcat);
             });
         }
 
