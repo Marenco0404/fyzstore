@@ -752,6 +752,23 @@ const ProductosSystem = {
                 this.mostrarNotificacion('Producto no encontrado', 'error');
                 return false;
             }
+
+            // Validar stock disponible
+            if (!producto.stock || producto.stock <= 0) {
+                this.mostrarNotificacion('Este producto está agotado ❌', 'error');
+                return false;
+            }
+
+            // Verificar cuánto ya hay en el carrito
+            const carritoItems = window.Carrito?.items || [];
+            const productoEnCarrito = carritoItems.find(item => String(item.id) === String(producto.id));
+            const cantidadEnCarrito = productoEnCarrito?.cantidad || 0;
+
+            // Si ya tienen todo el stock disponible en carrito
+            if (cantidadEnCarrito >= producto.stock) {
+                this.mostrarNotificacion(`Ya agregaste todos los ${producto.stock} producto(s) disponible(s) de ${producto.nombre}`, 'warning');
+                return false;
+            }
             
             // Usar el sistema de carrito global
             if (window.Carrito) {
@@ -764,7 +781,8 @@ const ProductosSystem = {
                     precioOriginal: producto.tieneDescuento ? (producto.precioOriginal ?? null) : null,
                     descuento: producto.tieneDescuento ? (Number(producto.descuento) || 0) : 0,
                     imagen: producto.imagen || 'https://via.placeholder.com/150',
-                    categoria: producto.categoria
+                    categoria: producto.categoria,
+                    stock: producto.stock
                 });
                 // Nota: el stock SOLO se descuenta cuando se completa la compra.
                 return resultado;
