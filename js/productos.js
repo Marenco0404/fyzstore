@@ -553,6 +553,15 @@ const ProductosSystem = {
         try {
             this.productosFiltrados = this.productos;
             
+            // PRIMERO: Renderizar subcategorías dinámicas desde Firestore
+            // (esto llena el contenedor de filtros)
+            if (this.categoriaActual === 'perfumeria') {
+                this.renderizarPerfumeriaFiltros();
+            } else if (this.categoriaActual === 'sexshop') {
+                this.renderizarSexshopSubcategorias();
+                this.configurarSexshopCategoriasUI();
+            }
+
             // Actualizar contador
             this.actualizarContadorProductos();
             
@@ -560,17 +569,9 @@ const ProductosSystem = {
             const container = this.getProductsContainer();
             if (container) this.renderizarProductosGrid(this.productosFiltrados, container);
             
-            // Configurar filtros si existen
+            // DESPUÉS: Configurar filtros (precio, ordenamiento, búsqueda)
+            // No sobrescribe los filtros de subcategoría porque ya existen
             this.configurarFiltros();
-
-            // Renderizar subcategorías dinámicas DESPUÉS de configurarFiltros
-            // (para que no se borren las que cargamos desde Firestore)
-            if (this.categoriaActual === 'perfumeria') {
-                this.renderizarPerfumeriaFiltros();
-            } else if (this.categoriaActual === 'sexshop') {
-                this.renderizarSexshopSubcategorias();
-                this.configurarSexshopCategoriasUI();
-            }
             
         } catch (error) {
             console.error('❌ Error mostrando productos por categoría:', error);
@@ -582,12 +583,19 @@ const ProductosSystem = {
         if (!container) return;
         
         if (productos.length === 0) {
+            // Obtener el nombre de la subcategoría activa si existe
+            const activeBtn = document.querySelector('.filter-btn.active');
+            let subcatInfo = '';
+            if (activeBtn && activeBtn.dataset.filter !== 'all') {
+                subcatInfo = ` en ${activeBtn.textContent}`;
+            }
+
             container.innerHTML = `
                 <div class="no-products">
                     <div class="no-products-icon">
                         <i class="fas fa-box-open"></i>
                     </div>
-                    <h3>No hay productos disponibles</h3>
+                    <h3>No hay productos disponibles${subcatInfo}</h3>
                     <p>Pronto añadiremos nuevos productos a esta categoría.</p>
                     <a href="index.html" class="btn btn-primary">
                         <i class="fas fa-arrow-left"></i> Volver al inicio
