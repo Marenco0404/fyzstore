@@ -1,0 +1,7 @@
+{
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "installCommand": "npm install",
+  "public": true,
+  "regions": ["iad1"]
+}

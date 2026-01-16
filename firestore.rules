@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in ['admin', 'superadmin'];
+    }
+
+    // Public catalog (read-only)
+    match /productos/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /categorias/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /subcategorias/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Users
+    match /usuarios/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Orders (OPEN para guest checkout con validación PayPal)
+    match /pedidos/{pedidoId} {
+      // Allow anyone to READ their order using paypalOrderId
+      allow read: if true;
+
+      // Allow ANYONE to CREATE an order (for guest checkout)
+      // Basic validation only to prevent abuse
+      allow create: if request.resource.data.paypalOrderId != null &&
+                       request.resource.data.totalUSD > 0 &&
+                       request.resource.data.items is list;
+
+      // Update/Delete: admins or owners only
+      allow update, delete: if isAdmin() || 
+                               (signedIn() && resource.data.usuarioId == request.auth.uid);
+    }
+  }
+}
