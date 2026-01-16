@@ -296,6 +296,16 @@ const AdminSystem = {
             document.getElementById('usuarios-count').textContent = 
                 totalUsuarios;
             
+            // Contar productos con descuento
+            let productosConDescuento = 0;
+            productosSnap.forEach(doc => {
+                if (doc.data().descuento && doc.data().descuento > 0) {
+                    productosConDescuento++;
+                }
+            });
+            document.getElementById('descuentos-count').textContent = 
+                productosConDescuento;
+            
             document.getElementById('pedidos-pendientes').textContent = 
                 pedidosPendientes;
 
@@ -432,6 +442,7 @@ const AdminSystem = {
             'dashboard': 'Dashboard',
             'productos': 'Productos',
             'categorias': 'Categorías',
+            'descuentos': 'Descuentos',
             'pedidos': 'Pedidos',
             'usuarios': 'Usuarios',
             'ventas': 'Ventas'
@@ -448,6 +459,9 @@ const AdminSystem = {
                 break;
             case 'categorias':
                 this.mostrarCategorias();
+                break;
+            case 'descuentos':
+                DescuentoSystem.init();
                 break;
             case 'pedidos':
                 this.mostrarPedidos();
