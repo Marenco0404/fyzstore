@@ -1151,6 +1151,20 @@ const ProductosSystem = {
             console.log(`💰 Filtro especial: "Con Descuento" detectado`);
             productosFiltrados = productosFiltrados.filter(p => p.tieneDescuento === true);
             console.log(`✅ ${productosFiltrados.length} productos con descuento encontrados`);
+            
+            // ACTUALIZAR EL RANGO DE PRECIO BASADO EN LOS PRODUCTOS CON DESCUENTO
+            const priceRange = document.getElementById('price-range');
+            if (priceRange && productosFiltrados.length > 0) {
+                const maxPriceFiltrado = Math.max(...productosFiltrados.map(p => p.precio || 0));
+                console.log(`💰 Actualizando rango de precio máximo a: ${maxPriceFiltrado} (basado en ${productosFiltrados.length} productos con descuento)`);
+                priceRange.max = maxPriceFiltrado;
+                priceRange.value = maxPriceFiltrado;
+                
+                const priceMaxEl = document.getElementById('price-max');
+                if (priceMaxEl) {
+                    priceMaxEl.textContent = `${formatCRC(maxPriceFiltrado)}+`;
+                }
+            }
         } else if (filtroSubcat && filtroSubcat !== 'all') {
             console.log(`📋 Aplicando filtro "${filtroSubcat}" a ${productosFiltrados.length} productos...`);
             
