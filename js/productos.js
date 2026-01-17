@@ -998,9 +998,10 @@ const ProductosSystem = {
             // Reconectar eventos de los botones
             document.querySelectorAll('#category-filters .filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    this.aplicarFiltros();
+                    e.preventDefault();
+                    // Usar aplicarFiltroCategoria para mantener consistencia
+                    const filtro = btn.dataset.filter || 'all';
+                    this.aplicarFiltroCategoria(filtro);
                 });
             });
 

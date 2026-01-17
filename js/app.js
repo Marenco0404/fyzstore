@@ -5,6 +5,63 @@
  */
 
 const App = {
+  // Inyectar botón WhatsApp flotante global en todas las páginas
+  injectWhatsAppButton() {
+    // Si el botón ya existe, solo actualizamos el mensaje si necesario
+    let whatsappButton = document.getElementById('whatsapp-button-global');
+    
+    if (whatsappButton) {
+      console.log('ℹ️ Botón WhatsApp ya existe, actualizando...');
+      // Simplemente actualizamos el href por si cambió la página
+      const path = window.location.pathname;
+      const file = (path.split("/").pop() || "index.html").toLowerCase();
+      let mensaje = "Hola%20F%26Z%20Store%20%21%20Necesito%20m%C3%A1s%20informaci%C3%B3n%20sobre%20sus%20productos";
+      if (file === "perfumeria.html") {
+        mensaje = "Hola%20F%26Z%20Store%20%21%20Necesito%20m%C3%A1s%20informaci%C3%B3n%20sobre%20sus%20perfumes";
+      } else if (file === "sexshop.html") {
+        mensaje = "Hola%20F%26Z%20Store%20%21%20Tengo%20una%20consulta%20sobre%20productos";
+      }
+      whatsappButton.href = `https://wa.me/50672932253?text=${mensaje}`;
+      return;
+    }
+
+    // Obtener el mensaje según la página
+    const path = window.location.pathname;
+    const file = (path.split("/").pop() || "index.html").toLowerCase();
+    
+    let mensaje = "Hola%20F%26Z%20Store%20%21%20Necesito%20m%C3%A1s%20informaci%C3%B3n%20sobre%20sus%20productos";
+    
+    if (file === "perfumeria.html") {
+      mensaje = "Hola%20F%26Z%20Store%20%21%20Necesito%20m%C3%A1s%20informaci%C3%B3n%20sobre%20sus%20perfumes";
+    } else if (file === "sexshop.html") {
+      mensaje = "Hola%20F%26Z%20Store%20%21%20Tengo%20una%20consulta%20sobre%20productos";
+    }
+
+    // Crear el botón
+    whatsappButton = document.createElement('a');
+    whatsappButton.id = 'whatsapp-button-global';
+    whatsappButton.href = `https://wa.me/50672932253?text=${mensaje}`;
+    whatsappButton.target = '_blank';
+    whatsappButton.rel = 'noopener noreferrer';
+    whatsappButton.className = 'whatsapp-button';
+    whatsappButton.title = 'Contactar por WhatsApp';
+    
+    whatsappButton.innerHTML = `
+      <span class="whatsapp-tooltip">¡Hablemos!</span>
+      <i class="fab fa-whatsapp"></i>
+    `;
+    
+    // Inyectar en el body (si no existe)
+    if (document.body) {
+      document.body.appendChild(whatsappButton);
+      console.log('✅ Botón WhatsApp flotante inyectado en la página:', file);
+    } else {
+      console.warn('⚠️ Body no existe aún, reintentando...');
+      // Reintentar en 100ms
+      setTimeout(() => this.injectWhatsAppButton(), 100);
+    }
+  },
+
   initMobileMenu() {
     const menuToggle = document.getElementById('menu-toggle');
     const navMenu = document.querySelector('.nav-menu');
@@ -63,6 +120,9 @@ const App = {
 
       console.log("📍 Página:", file);
 
+      // ✨ Inyectar botón WhatsApp flotante (TODAS las páginas)
+      App.injectWhatsAppButton();
+
       // Menú hamburguesa (mobile)
       App.initMobileMenu();
 
@@ -100,6 +160,17 @@ const App = {
         window.CheckoutSystem?.initConfirmacion?.();
       }
     });
+
+    // Inyectar el botón también cuando se cargan nuevos contenidos (navegación sin reload)
+    // Pero solo si el DOM ya está ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => App.injectWhatsAppButton(), 100);
+      });
+    } else {
+      // El DOM ya está cargado, inyectar inmediatamente
+      setTimeout(() => App.injectWhatsAppButton(), 100);
+    }
   }
 };
 
