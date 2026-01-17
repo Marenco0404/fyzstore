@@ -1146,7 +1146,12 @@ const ProductosSystem = {
         
         console.log(`🔍 Filtro activo: "${filtroSubcat}" (botón: ${categoriaActiva?.textContent}, data-filter: ${categoriaActiva?.dataset.filter})`);
         
-        if (filtroSubcat && filtroSubcat !== 'all') {
+        // MANEJO ESPECIAL PARA "CON DESCUENTO"
+        if (filtroSubcat === 'condescuento') {
+            console.log(`💰 Filtro especial: "Con Descuento" detectado`);
+            productosFiltrados = productosFiltrados.filter(p => p.tieneDescuento === true);
+            console.log(`✅ ${productosFiltrados.length} productos con descuento encontrados`);
+        } else if (filtroSubcat && filtroSubcat !== 'all') {
             console.log(`📋 Aplicando filtro "${filtroSubcat}" a ${productosFiltrados.length} productos...`);
             
             // Filtrar: comparar la subcategoría normalizada del producto
@@ -1173,10 +1178,6 @@ const ProductosSystem = {
                 // Normalizar todas las subcategorías y buscar coincidencia
                 const subcatNormalizadas = subcategorias.map(s => this.normalizar(s));
                 const match = subcatNormalizadas.includes(filtroSubcat);
-                
-                if (filtroSubcat === 'condescuento' && match) {
-                    console.log(`✅ ${p.nombre}: coincide con "condescuento" (subcategorias: ${subcategorias.join(', ')})`);
-                }
                 
                 return match;
             });
