@@ -1224,15 +1224,17 @@ const ProductosSystem = {
             productosFiltrados = productosConDescuento;
         }
         
-        // Filtrar por precio máximo (usar precioOriginal si tiene descuento, si no usar precio)
+        // Filtrar por precio máximo
         const priceRange = document.getElementById('price-range');
         if (priceRange) {
             const precioMax = parseInt(priceRange.value);
             console.log(`💰 Filtrando por precio máximo: ${precioMax}`);
-            console.log(`   Productos antes del filtro de precio:`, productosFiltrados.map(p => ({nombre: p.nombre, precio: p.precio})));
+            console.log(`   Productos antes del filtro de precio:`, productosFiltrados.map(p => ({nombre: p.nombre, precio: p.precio, precioOriginal: p.precioOriginal})));
             
             productosFiltrados = productosFiltrados.filter(p => {
-                const precioMostrado = p.tieneDescuento ? (p.precioOriginal || p.precio) : p.precio;
+                // SIEMPRE usar el precio con descuento (p.precio) para comparar
+                // porque ese es el precio que el usuario ve y el del rango
+                const precioMostrado = p.precio;
                 const pasa = precioMostrado <= precioMax;
                 console.log(`   ${p.nombre}: precio=${precioMostrado}, max=${precioMax}, pasa=${pasa}`);
                 return pasa;
